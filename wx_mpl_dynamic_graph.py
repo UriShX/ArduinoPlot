@@ -241,7 +241,7 @@ class GraphFrame(wx.Frame):
         # Plot the data and save the reference to the plotted line
         self.plot_data = self.axes.plot(
             self.data, linewidth=1, color=(1, 1, 0),
-        )[0]
+        )
 
     def get_plot_xrange(self):
         """
@@ -266,10 +266,20 @@ class GraphFrame(wx.Frame):
         maximal values of the data set and adding minimal necessary margin.
 
         """
-        y_min = round(min(self.data)) - 1 if self.ymin_control_box.is_auto() \
+        min_list = []
+        max_list = []
+        
+        try:
+            min_list = min(self.data)
+            max_list = max(self.data)
+        except:
+            min_list = 0
+            max_list = 0
+
+        y_min = round(float(min_list)) - 1 if self.ymin_control_box.is_auto() \
             else int(self.ymin_control_box.value)
 
-        y_max = round(max(self.data)) + 1 if self.ymax_control_box.is_auto() \
+        y_max = round(float(max_list)) + 1 if self.ymax_control_box.is_auto() \
             else int(self.ymax_control_box.value)
 
         return y_min, y_max
@@ -291,8 +301,9 @@ class GraphFrame(wx.Frame):
             visible=self.xlabels_visibility_check_box.IsChecked()
         )
 
-        self.plot_data.set_xdata(np.arange(len(self.data)))
-        self.plot_data.set_ydata(np.array(self.data))
+        for datapoint in self.plot_data:
+            datapoint.set_xdata(np.arange(len(self.data)))
+            datapoint.set_ydata(np.array(self.data))
 
         self.canvas.draw()
 
@@ -329,7 +340,7 @@ class GraphFrame(wx.Frame):
     def on_plot_redraw(self, event):
         """Get new value from data source if necessary and redraw the plot."""
         if not self.paused:
-            self.data.append(self.data_source.next())
+            self.data.append(self.data_source.next()[0])
 
         self.draw_plot()
 
@@ -360,12 +371,15 @@ def parse_script_args():
 
     args = parser.parse_args()
 
-    return {key: val for key, val in vars(args).iteritems() if val is not None}
+    return {key: val for key, val in vars(args).items() if val is not None}
 
 
 if __name__ == "__main__":
 
-    kwargs = parse_script_args()
+    # kwargs = parse_script_args()
+    # print(f'kwargs: {kwargs}, type: {type(kwargs)}')
+    # exit()
+    kwargs = {'port': 'COM15', 'baudrate': 256000}
     data_source = SerialData(**kwargs)
 
     app = wx.App()
